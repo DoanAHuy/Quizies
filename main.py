@@ -23,8 +23,17 @@ root.Progress = tk.IntVar()
 root.ProgressText= tk.StringVar()
 root.feedback = tk.StringVar()
 root.quitBtn = tk.Button(root, text="Quit", command=root.quit)
-root.nextBtn = tk.Button(root, text="Next", command=lambda: next_question())
 
+root.nextBtn = tk.Button(root, text="Next", command=lambda: next_question())
+root.Button1 = tk.Radiobutton(root, anchor="w", textvariable=root.O1, variable=root.user_selected, value=1,
+                              command=lambda: set_choices(1), indicatoron=False)
+root.Button2 = tk.Radiobutton(root, anchor="w", textvariable=root.O2, variable=root.user_selected, value=2,
+                              command=lambda: set_choices(2), indicatoron=False)
+root.Button3 = tk.Radiobutton(root, anchor="w", textvariable=root.O3, variable=root.user_selected, value=3,
+                              command=lambda: set_choices(3), indicatoron=False)
+root.Button4 = tk.Radiobutton(root, anchor="w", textvariable=root.O4, variable=root.user_selected, value=4,
+                              command=lambda: set_choices(4), indicatoron=False)
+root.label_feedback = ttk.Label(textvariable=root.feedback, font=("Arial", 15, "bold"),anchor="w")
 #start quiz
 def start_game():
     if not hasattr(root, 'widgets_created'):
@@ -35,13 +44,6 @@ def start_game():
     root.Progress.set(0)
     root.question_index.clear()
 root.start_game = start_game
-#Next button
-def next_question():
-    validate_ans()
-    root.question_index.append(root.current_index)
-    root.after(1000,load_questions())
-root.next = next_question
-
 
 #store user choices
 def set_choices(choice):
@@ -94,7 +96,7 @@ def load_questions():
 def validate_ans():
     selected_value = root.user_selected.get()
     if selected_value == 0:
-        root.feedback.set("")
+
         return
     selected_text = [root.O1.get(), root.O2.get(), root.O3.get(), root.O4.get()][selected_value - 1]
     if selected_text == root.correct_answer:
@@ -109,6 +111,14 @@ def validate_ans():
 
     print(f"selected:{selected_text},correct:{root.correct_answer}")
     disable_choices()
+#Next button
+def next_question():
+    validate_ans()
+    root.feedback.set("")
+    root.question_index.append(root.current_index)
+    root.after(1000,load_questions())
+root.next = next_question
+
 #disable after choice
 def disable_choices():
     root.Button1.config(state="disabled")
@@ -158,23 +168,14 @@ def createWidgets(root, top):
     root.label_score_value.grid(column=5, row=3, sticky="w")
 
     # Feedback label
-    root.label_feedback = ttk.Label(
-        textvariable=root.feedback,
-        font=("Arial", 12, "bold"),
-        foreground="green",
-        anchor="e"
-    )
-    root.label_feedback.grid(column=7, row=8, columnspan=5, pady=10)
+    root.label_feedback.grid(column=2, row=3, columnspan=5, pady=10)
 
     # Control buttons
     root.quitBtn.grid(column=2, row=9, pady=10)
     root.nextBtn.grid(column=4, row=9, pady=10)
 
-#Create multiple choices
-    root.Button1 = tk.Radiobutton(root, anchor="w", textvariable=root.O1, variable=root.user_selected, value=1, command=lambda:set_choices(1))
-    root.Button2 = tk.Radiobutton(root, anchor="w", textvariable=root.O2, variable=root.user_selected, value=2, command=lambda:set_choices(2))
-    root.Button3 = tk.Radiobutton(root,anchor="w", textvariable=root.O3,variable=root.user_selected, value=3, command=lambda:set_choices(3))
-    root.Button4 = tk.Radiobutton(root,anchor="w", textvariable=root.O4,variable=root.user_selected, value=4, command=lambda:set_choices(4))
+#Create choices
+
     root.Button1.grid(column=2, row=4, columnspan=3, sticky="w", padx=20, pady=5)
     root.Button2.grid(column=2, row=5, columnspan=3, sticky="w", padx=20, pady=5)
     root.Button3.grid(column=2, row=6, columnspan=3, sticky="w", padx=20, pady=5)
