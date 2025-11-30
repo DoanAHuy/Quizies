@@ -13,10 +13,10 @@ pyglet.font.add_directory("MicrosoftAptosFonts")
 
 #declare variables
 root = tk.Tk()
-root.O1 = ttk.StringVar()
-root.O2 = ttk.StringVar()
-root.O3 = ttk.StringVar()
-root.O4 = ttk.StringVar()
+root.O1 = tk.StringVar()
+root.O2 = tk.StringVar()
+root.O3 = tk.StringVar()
+root.O4 = tk.StringVar()
 root.correct_answer = ""
 root.user_selected = tk.IntVar(root, 1)
 root.question = tk.StringVar()
@@ -27,9 +27,7 @@ top = root.winfo_toplevel()
 root.Progress = tk.IntVar()
 root.ProgressText= tk.StringVar()
 root.feedback = tk.StringVar()
-root.quitBtn = tk.Button(root, text="Quit", command=root.quit)
-root.nextBtn = tk.Button(root, text="Next", command=lambda: next_question())
-
+root.next_mode = 'check'
 
 #start quiz
 def start_game():
@@ -43,12 +41,15 @@ def start_game():
 root.start_game = start_game
 #Next button
 def next_question():
-    validate_ans()
-    root.question_index.append(root.current_index)
-    root.after(1000,load_questions())
-root.next = next_question
-
-
+    if root.next_mode == 'check':
+        validate_ans()
+        root.next_mode = 'next'
+        root.nextBtn.config(text="Next question")
+    else:
+        root.question_index.append(root.current_index)
+        load_questions()
+        root.next_mode = 'check'
+        root.nextBtn.config(text="Check question")
 #store user choices
 def set_choices(choice):
     root.user_selected.set(choice)
@@ -66,6 +67,7 @@ def load_questions():
         return
     root.nextBtn.config(state="disabled")
     root.user_selected.set(0)# reset user choice
+    enable_choices()
 #random question
     while True:
         index = random.randint(0, len(questions) - 1)
@@ -77,9 +79,6 @@ def load_questions():
     q = questions[root.current_index]
     root.correct_answer = q["Answer"]
     root.question.set(q["Quest"])
-    length=len(root.question.get())
-    width = min(800, 100 + 10 * length)
-    root.geometry(f'{width}' + "x180")
     #pair choices with data's options
     root.choices=q["Options"].copy()
     random.shuffle(root.choices)
@@ -89,11 +88,6 @@ def load_questions():
     root.O4.set(root.choices[3])
     root.nextBtn.config(state="disabled")
     root.feedback.set("") #reset the feedback
-    #reenable button
-    root.Button1.config(state="normal")
-    root.Button2.config(state="normal")
-    root.Button3.config(state="normal")
-    root.Button4.config(state="normal")
 
 
 #check the answer
@@ -121,6 +115,12 @@ def disable_choices():
     root.Button2.config(state="disabled")
     root.Button3.config(state="disabled")
     root.Button4.config(state="disabled")
+#reset state after question
+def enable_choices():
+    root.Button1.config(state="normal")
+    root.Button2.config(state="normal")
+    root.Button3.config(state="normal")
+    root.Button4.config(state="normal")
 
 #Create start menu
 def menu():
@@ -130,85 +130,147 @@ def menu():
     top.config(menu=root.menu)
 
 #Create Widgets
-def createWidgets(root, top):
+def createWidgets(root,top):
     # setting question frames
     def create_question_frames(container):
         frame = ttk.Frame(container)
         frame['borderwidth'] = 5
-        frame['relief']='solid'
+        frame['relief'] = 'solid'
+
         # Progress label
-        frame.label_progress = ttk.Label(textvariable=root.ProgressText, font=("Aptos ExtraBold", 12))
-        frame.label_progress.grid(column=1, row=1, columnspan=5)
+        root.label_progress = ttk.Label(
+            frame,
+            textvariable=root.ProgressText,
+            font=("Aptos ExtraBold", 12)
+        )
+        root.label_progress.grid(column=0, row=0, columnspan=2, sticky="ew")
+
         # Question label
-        frame.label_question = ttk.Label(textvariable=root.question, font=("Aptos ExtraBold", 15), wraplength=500,
-                                        anchor="center")
-        frame.label_question.grid(column=1, row=2, sticky=tk.W)
+        root.label_question = ttk.Label(
+            frame,
+            textvariable=root.question,
+            font=("Aptos ExtraBold", 15),
+            wraplength=600,
+            anchor="center",
+            justify="center"
+        )
+        root.label_question.grid(column=0, row=1, columnspan=2, pady=10, sticky="nsew")
 
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
 
+        # Auto-fit content to window
+        def adjust_widgets(event):
+            new_width = event.width - 50
 
-        for widget in root.winfo_children():
-            widget.grid(padx=5, pady=10)
+            # Question label auto-fit
+            root.label_question.config(wraplength=new_width)
+            size = max(12, int(event.height / 30))
+            root.label_question.config(font=("Aptos ExtraBold", size))
+
+            # Feedback label auto-fit (if created)
+            if hasattr(root, "label_feedback"):
+                root.label_feedback.config(wraplength=new_width)
+                fb_size = max(10, int(event.height / 40))
+                root.label_feedback.config(font=("Aptos ExtraBold", fb_size, "bold"))
+
+        root.bind("<Configure>", adjust_widgets)
+
         return frame
+
     #setting choices frame
     def create_buttons_frames(container):
         frame = ttk.Frame(container)
+        frame['borderwidth'] = 5
+        frame['relief'] = 'solid'
         frame.columnconfigure(0, weight=1)
         # Create multiple choices
-        frame.Button1 = ttk.Radiobutton(root, style='info.Outline.Toolbutton', textvariable=root.O1,
+        root.Button1 = ttk.Radiobutton(frame, style='info.Outline.Toolbutton', textvariable=root.O1,
                                        variable=root.user_selected, value=1, command=lambda: set_choices(1))
-        frame.Button2 = ttk.Radiobutton(root, style='info.Outline.Toolbutton', textvariable=root.O2,
+        root.Button2 = ttk.Radiobutton(frame, style='info.Outline.Toolbutton', textvariable=root.O2,
                                        variable=root.user_selected, value=2, command=lambda: set_choices(2))
-        frame.Button3 = ttk.Radiobutton(root, style='info.Outline.Toolbutton', textvariable=root.O3,
+        root.Button3 = ttk.Radiobutton(frame, style='info.Outline.Toolbutton', textvariable=root.O3,
                                        variable=root.user_selected, value=3, command=lambda: set_choices(3))
-        frame.Button4 = ttk.Radiobutton(root, style='info.Outline.Toolbutton', textvariable=root.O4,
+        root.Button4 = ttk.Radiobutton(frame, style='info.Outline.Toolbutton', textvariable=root.O4,
                                        variable=root.user_selected, value=4, command=lambda: set_choices(4))
-        frame.Button1.grid(column=2, row=4, columnspan=3, sticky="w", padx=20, pady=5)
-        frame.Button2.grid(column=2, row=5, columnspan=3, sticky="w", padx=20, pady=5)
-        frame.Button3.grid(column=2, row=6, columnspan=3, sticky="w", padx=20, pady=5)
-        frame.Button4.grid(column=2, row=7, columnspan=3, sticky="w", padx=20, pady=5)
+        root.Button1.grid(column=0, row=0,sticky='w' , padx=20, pady=5)
+        root.Button2.grid(column=0, row=1,sticky='w' , padx=20, pady=5)
+        root.Button3.grid(column=0, row=2,sticky='w' , padx=20, pady=5)
+        root.Button4.grid(column=0, row=3,sticky='w' , padx=20, pady=5)
+
         # buttons style
         style = ttk.Style()
         style.configure('info.Outline.Toolbutton', font=("Aptos ExtraBold", 12))
-        for widget in root.winfo_children():
-            widget.grid(padx=5, pady=10)
+
         return frame
 
     def create_interaction_frames(container):
         frame = ttk.Frame(container)
+        frame['borderwidth'] = 5
+        frame['relief'] = 'solid'
         # Control buttons
-        frame.quitBtn.grid(column=2, row=8, pady=10)
-        frame.nextBtn.grid(column=4, row=8, pady=10)
+        root.quitBtn = ttk.Button(frame, text="Quit", command=root.quit)
+        root.nextBtn = ttk.Button(frame, text="Next", command=lambda: next_question())
+        root.quitBtn.grid(column=0, row=1,padx=10, pady=10)
+        root.nextBtn.grid(column=1, row=1,padx=10, pady=10)
         # Score label
-        frame.label_score = ttk.Label(text="Score:", font=("Arial", 14))
-        frame.label_score.grid(column=3, row=1)
-        frame.label_score_value = ttk.Label(textvariable=root.score, font=("Arial", 12))
-        frame.label_score_value.grid(column=4, row=1)
-        # Feedback label
+        root.label_score = ttk.Label(frame,text="Score:", font=("Arial", 14))
+        root.label_score.grid(column=0, row=2,sticky="e")
+        root.label_score_value = ttk.Label(frame,textvariable=root.score, font=("Arial", 12))
+        root.label_score_value.grid(column=1, row=2,sticky="w")
+        return frame
+    def create_feedback_frame(container):
+        frame = ttk.Frame(container)
         root.label_feedback = ttk.Label(
+            frame,
             textvariable=root.feedback,
             font=("Aptos ExtraBold", 12, "bold"),
             foreground="green",
-            anchor="e"
+            anchor="center",
+            justify="center"
         )
-        root.label_feedback.grid(column=6, row=8, columnspan=5)
-        for widget in root.winfo_children():
-            widget.grid(padx=5, pady=10)
-
+        root.label_feedback.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        frame.columnconfigure(0, weight=1)
         return frame
 
-    #auto resize
-#top.bind("<Configure>", lambda event: adjust_font_size(event, root))
-def create_main_window():
-    root.resizable(0, 0)
     # layout on the root window
-    root.columnconfigure(0, weight=4)
-    root.columnconfigure(1, weight=1)
+    root.rowconfigure(0, weight=2)  # Question
+    root.rowconfigure(1, weight=2)  # Choices
+    root.rowconfigure(2, weight=1)  # Feedback
+    root.rowconfigure(3, weight=1)  # Interaction
+    root.columnconfigure(0, weight=1)
 
     questions_frame = create_question_frames(root)
-    questions_frame.grid(column=0, row=0)
+    questions_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
-    button_frame = create_buttons_frames(root)
-    button_frame.grid(column=1, row=0)
+    buttons_frame = create_buttons_frames(root)
+    buttons_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+
+    feedback_frame = create_feedback_frame(root)
+    feedback_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
+
+    interaction_frame = create_interaction_frames(root)
+    interaction_frame.grid(row=3, column=0, sticky="ew", padx=10, pady=10)
+
+
+    # Auto-fit content to window
+    def adjust_widgets(event):
+        new_width = event.width - 50
+        # Question label auto-fit
+        root.label_question.config(wraplength=new_width)
+        size = max(12, int(event.height / 30))
+        root.label_question.config(font=("Aptos ExtraBold", size))
+        # Feedback label auto-fit
+        root.label_feedback.config(wraplength=new_width)
+        fb_size = max(10, int(event.height / 40))
+        root.label_feedback.config(font=("Aptos ExtraBold", fb_size, "bold"))
+
+    root.bind("<Configure>", adjust_widgets)
+
+
+def create_main_window():
+    root.geometry("750x700")
+    root.resizable(True,True)
     menu()
     root.mainloop()
 
