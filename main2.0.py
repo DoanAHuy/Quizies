@@ -44,16 +44,16 @@ def next_question():
     if root.next_mode == 'check':
         validate_ans()
         root.next_mode = 'next'
-        root.nextBtn.config(text="Next question")
+        root.next_button.config(text="Next question")
     else:
         root.question_index.append(root.current_index)
         load_questions()
         root.next_mode = 'check'
-        root.nextBtn.config(text="Check question")
+        root.next_button.config(text="Check question")
 #store user choices
 def set_choices(choice):
     root.user_selected.set(choice)
-    root.nextBtn.config(state="normal")
+    root.next_button.config(state="normal")
 #Progess bar
 def progress_bar():
     root.Progress.set(root.Progress.get()+1)
@@ -99,13 +99,13 @@ def validate_ans():
     selected_text = [root.O1.get(), root.O2.get(), root.O3.get(), root.O4.get()][selected_value - 1]
     if selected_text == root.correct_answer:
         root.score.set(root.score.get() + 5)
-        root.label_feedback.config(foreground="green")
+        root.feedback_label.config(foreground="green")
         root.feedback.set("Correct!")
         with open("answer.txt","a", encoding="utf-8") as file:
             file.write(selected_text + '\n')
         print("Correct!")
     else:
-        root.label_feedback.config(foreground="red")
+        root.feedback_label.config(foreground="red")
         root.feedback.set(f"Incorrect!, Correct answer is {root.correct_answer}")
         with open("answer.txt","a", encoding="utf-8") as file:
             file.write(selected_text + '\n' + '\n')
@@ -163,76 +163,76 @@ def createWidgets(root,top):
     # Main container
     main_frame = ttk.Frame(root, padding=20)
     main_frame.pack(fill="both", expand=True)
+    #style for question
+    style.configure("info.TLabel")
     #Question
-    question_frame = ttk.Labelframe(main_frame, text="Question", padding=15, bootstyle="info")
-    question_frame.pack(fill="x", pady=10)
-    question_label = ttk.Label(
-        question_frame,
+    root.question_frame = ttk.Labelframe(main_frame,text="Question:", padding=15, style="info.TLabel")
+    root.question_frame.pack(fill="x", pady=10)
+    root.question_label = ttk.Label(
+        root.question_frame,
         textvariable=root.question,
         font=("Aptos ExtraBold", 16),
         anchor="center",
         wraplength=600
     )
-    question_label.pack(pady=10)
+    root.question_label.pack(pady=10)
     #Choice frame
-    frame = ttk.Frame(root, style="body.TFrame", padding=20)
-    frame['borderwidth'] = 5
-    frame['relief'] = 'solid'
-    frame.columnconfigure(0, weight=1)
-    # Create multiple choices
-    root.Button1 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O1,
-                                   variable=root.user_selected, value=1, command=lambda: set_choices(1))
-    root.Button2 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O2,
-                                   variable=root.user_selected, value=2, command=lambda: set_choices(2))
-    root.Button3 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O3,
-                                   variable=root.user_selected, value=3, command=lambda: set_choices(3))
-    root.Button4 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O4,
-                                   variable=root.user_selected, value=4, command=lambda: set_choices(4))
-    root.Button1.grid(column=0, row=0, sticky='w', padx=20, pady=5)
-    root.Button2.grid(column=0, row=1, sticky='w', padx=20, pady=5)
-    root.Button3.grid(column=0, row=2, sticky='w', padx=20, pady=5)
-    root.Button4.grid(column=0, row=3, sticky='w', padx=20, pady=5)
-    # buttons style
+    choices_frame = ttk.Frame(main_frame, padding=15)
+    choices_frame.pack(fill="x", pady=10)
+
+    # style for buttons
     style.configure("custom.Toolbutton",
                     background="#FF8DC6",
                     foreground="red",
-                    font=("Aptos ExtraBold", 16)
+                    font=("Aptos ExtraBold", 14)
                     )
 
-    # Feedback section
-    feedback_frame = ttk.Frame(main_frame, padding=10)
-    feedback_frame.pack(fill="x", pady=10)
+    # Create multiple choices
+    root.Button1 = ttk.Radiobutton(choices_frame,style="custom.Toolbutton", textvariable=root.O1, variable=root.user_selected, value=1,
+                                   command=lambda: set_choices(1))
+    root.Button2 = ttk.Radiobutton(choices_frame,style="custom.Toolbutton", textvariable=root.O2, variable=root.user_selected, value=2,
+                                   command=lambda: set_choices(2))
+    root.Button3 = ttk.Radiobutton(choices_frame,style="custom.Toolbutton", textvariable=root.O3, variable=root.user_selected, value=3,
+                                   command=lambda: set_choices(3))
+    root.Button4 = ttk.Radiobutton(choices_frame,style="custom.Toolbutton", textvariable=root.O4, variable=root.user_selected, value=4,
+                                   command=lambda: set_choices(4))
+    for i, btn in enumerate([root.Button1, root.Button2, root.Button3, root.Button4]):
+        btn.pack(anchor="w", pady=5, padx=20)
 
-    feedback_label = ttk.Label(
-        feedback_frame,
+    # Feedback section
+    root.feedback_frame = ttk.Frame(main_frame, padding=10)
+    root.feedback_frame.pack(fill="x", pady=10)
+
+    root.feedback_label = ttk.Label(
+        root.feedback_frame,
         textvariable=root.feedback,
         font=("Segoe UI", 12),
         bootstyle="secondary"
     )
-    feedback_label.pack()
+    root.feedback_label.pack()
 
     # Score + Progress section
-    status_frame = ttk.Frame(main_frame, padding=10)
-    status_frame.pack(fill="x", pady=10)
+    root.status_frame = ttk.Frame(main_frame, padding=10)
+    root.status_frame.pack(fill="x", pady=10)
 
-    score_label = ttk.Label(
-        status_frame,
+    root.score_label = ttk.Label(
+        root.status_frame,
         textvariable=root.score,
         font=("Segoe UI", 12, "bold"),
         bootstyle="success"
     )
-    score_label.pack(side="left", padx=10)
+    root.score_label.pack(side="left", padx=10)
 
-    progress_label = ttk.Label(
-        status_frame,
+    root.progress_label = ttk.Label(
+        root.status_frame,
         textvariable=root.ProgressText,
         font=("Segoe UI", 12),
         bootstyle="info"
     )
-    progress_label.pack(side="right", padx=10)
+    root.progress_label.pack(side="right", padx=10)
 
     # Progress bar
-    progress_bar = ttk.Progressbar(
+    root.progress_bar = ttk.Progressbar(
         main_frame,
         orient="horizontal",
         mode="determinate",
@@ -240,27 +240,28 @@ def createWidgets(root,top):
         maximum=10,
         variable=root.Progress
     )
-    progress_bar.pack(pady=10)
-
+    root.progress_bar.pack(pady=10)
+    #Style for navi button
+    style.configure("next.TButton",background="#FF8DC6",foreground="green")
+    style.configure("quit.TButton",background="#FF8DC6",foreground="red")
     # Navigation buttons
     nav_frame = ttk.Frame(main_frame, padding=10)
     nav_frame.pack(fill="x", pady=10)
-
-    next_button = ttk.Button(
+    root.next_button = ttk.Button(
         nav_frame,
         text="Next Question ➡",
-        bootstyle="info",
+        style="next.TButton",
         command=next_question
     )
-    next_button.pack(side="right", padx=10)
+    root.next_button.pack(side="right", padx=10)
 
-    quit_button = ttk.Button(
+    root.quit_button = ttk.Button(
         nav_frame,
         text="Quit ✖",
-        bootstyle="danger",
+        style="quit.TButton",
         command=root.quit
     )
-    quit_button.pack(side="left", padx=10)
+    root.quit_button.pack(side="left", padx=10)
 
 def create_main_window():
     root.geometry("750x700")
