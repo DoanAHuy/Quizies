@@ -10,7 +10,7 @@ pyglet.options['win32_gdi_font'] = True
 pyglet.font.add_directory("MicrosoftAptosFonts")
 FILENAME="answer.txt"
 #declare variables
-root = tk.Tk()
+root = ttk.Window(themename="cosmo")
 root.O1 = tk.StringVar()
 root.O2 = tk.StringVar()
 root.O3 = tk.StringVar()
@@ -141,7 +141,7 @@ def show_summary_window():
         Sum_win.geometry("500x400")
         Summary_text=ttk.Label(Sum_win,text=f'Quiz completed,your final score is {root.score.get()}!')
         Summary_text.pack(pady=10)
-        show_button = ttk.Button(Sum_win,bootstyle="info",text='Show selected answer', command=show_answer_file(Sum_win))
+        show_button = ttk.Button(Sum_win,bootstyle="info",text='Show selected answer', command=lambda: show_answer_file(Sum_win))
         show_button.pack(pady=10)
         # exit button
         close_button = tk.Button(Sum_win, text="Exit Application", command=root.destroy)
@@ -165,7 +165,8 @@ def createWidgets(root,top):
     style.configure("custom.Toolbutton", background="#FF8DC6", foreground="red", font=("Aptos ExtraBold", 16))
     # setting question frames
     def create_question_frames(container):
-        frame = ttk.Frame(container)
+        frame = ttk.LabelFrame(container, text='Question',padding=20,bootstyle='info')
+
         frame['borderwidth'] = 5
         frame['relief'] = 'solid'
 
@@ -212,7 +213,7 @@ def createWidgets(root,top):
 
     #setting choices frame
     def create_buttons_frames(container):
-        frame = ttk.Frame(container,style="body.TFrame")
+        frame = ttk.Frame(container,style="body.TFrame",padding=20)
         frame['borderwidth'] = 5
         frame['relief'] = 'solid'
         frame.columnconfigure(0, weight=1)
