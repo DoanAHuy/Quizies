@@ -141,32 +141,82 @@ def show_summary_window():
         Sum_win.geometry("500x400")
         Summary_text=ttk.Label(Sum_win,text=f'Quiz completed,your final score is {root.score.get()}!')
         Summary_text.pack(pady=10)
-        show_button = ttk.Button(Sum_win,bootstyle="info",text='Show selected answer', command=lambda: show_answer_file(Sum_win))
-        show_button.pack(pady=10)
+        # Navigation buttons
+        nav_frame = ttk.Frame(Sum_win, padding=10)
+        nav_frame.pack(fill="x")
+        #show answer
+        show_button = ttk.Button(nav_frame,bootstyle="info",text='Show selected answer', command=lambda: show_answer_file(Sum_win))
+        show_button.pack(side="right",pady=10)
         # exit button
-        close_button = tk.Button(Sum_win, text="Exit Application", command=root.destroy)
-        close_button.pack(pady=10)
-def show_answer_file(Sum_win):
-        root.withdraw()
-        #create answer window
-        new_win = tk.Toplevel(Sum_win)
-        new_win.title("Answer")
-        new_win.geometry("500x400")
-        # Text widget to display file contents
-        text_area = tk.Text(new_win, wrap="word", font=("Aptos ExtraBold", 15))
-        text_area.pack(expand=True, fill="both")
-        with open("answer.txt", "r", encoding="utf-8") as f:
-            content = f.read()
-        text_area.insert(tk.END, content)
+        play_again_btn = ttk.Button(
+            nav_frame,
+            text="Play Again 🔄",
+            bootstyle="success",
+            command=lambda: restart_quiz(Sum_win)
+        )
+        play_again_btn.pack(side="left", padx=10)
+    #close button
+        close_btn = ttk.Button(
+            nav_frame,
+            text="Close ✖",
+            bootstyle="danger",
+            command=Sum_win.destroy
+        )
+        close_btn.pack(side="right", padx=10)
+
+def show_answer_file(parent):
+    # Create a new window for answers
+    ans_win = ttk.Toplevel(parent)
+    ans_win.title("Saved Answers")
+    ans_win.geometry("500x400")
+
+    # Frame with scrollbar
+    frame = ttk.Frame(ans_win, padding=10)
+    frame.pack(fill="both", expand=True)
+
+    # Add a Text widget with vertical scrollbar
+    text_frame = ttk.Frame(frame)
+    text_frame.pack(fill="both", expand=True)
+
+    scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
+    scrollbar.pack(side="right", fill="y")
+
+    answer_text = tk.Text(
+        text_frame,
+        wrap="word",
+        yscrollcommand=scrollbar.set,
+        font=("Segoe UI", 12),
+        state="normal"
+    )
+    answer_text.pack(fill="both", expand=True)
+
+    scrollbar.config(command=answer_text.yview)
+
+    # Load answers from file
+    try:
+        with open("answer.txt", "r", encoding="utf-8") as file:
+            content = file.read()
+            answer_text.insert("1.0", content)
+    except FileNotFoundError:
+        answer_text.insert("1.0", "No answers saved yet.")
+
+    # Make text read-only
+    answer_text.config(state="disabled")
+
+def restart_quiz(Sum_win):
+    # Close the answer window
+    Sum_win.destroy()
+    # Reset quiz state and start again
+    start_game()
 #Create Widgets
 def createWidgets(root,top):
     # Main container
     main_frame = ttk.Frame(root, padding=20)
     main_frame.pack(fill="both", expand=True)
     #style for question
-    style.configure("info.TLabel")
+
     #Question
-    root.question_frame = ttk.Labelframe(main_frame,text="Question:", padding=15, style="info.TLabel")
+    root.question_frame = ttk.Labelframe(main_frame,text="Question:", padding=15, style="info")
     root.question_frame.pack(fill="x", pady=10)
     root.question_label = ttk.Label(
         root.question_frame,
