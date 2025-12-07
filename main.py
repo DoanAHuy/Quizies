@@ -1,20 +1,14 @@
 import random
 import tkinter as tk
-from tkinter import messagebox
 import pyglet
 import ttkbootstrap as ttk
 from ttkbootstrap import TkFrame
-
 from DATA import questions
+
 pyglet.options['win32_gdi_font'] = True
-
-
-
 #path for font
 pyglet.font.add_directory("MicrosoftAptosFonts")
-
 FILENAME="answer.txt"
-
 #declare variables
 root = tk.Tk()
 root.O1 = tk.StringVar()
@@ -32,6 +26,7 @@ root.Progress = tk.IntVar()
 root.ProgressText= tk.StringVar()
 root.feedback = tk.StringVar()
 root.next_mode = 'check'
+style = ttk.Style()
 
 #start quiz
 def start_game():
@@ -67,8 +62,7 @@ def progress_bar():
 #load question
 def load_questions():
     if len(root.question_index) == len(questions):
-        messagebox.showinfo("Quiz complete", f"Final score is {root.score.get()}")
-        root.quit()
+        show_summary_window()
         return
     root.nextBtn.config(state="disabled")
     root.user_selected.set(0)# reset user choice
@@ -84,7 +78,7 @@ def load_questions():
     q = questions[root.current_index]
     root.correct_answer = q["Answer"]
     root.question.set(q["Quest"])
-    #pair choices with data's options
+    #pair choices with data.py
     root.choices=q["Options"].copy()
     random.shuffle(root.choices)
     root.O1.set(root.choices[0])
@@ -97,6 +91,7 @@ def load_questions():
 
 #check the answer
 def validate_ans():
+    disable_choices()
     selected_value = root.user_selected.get()
     if selected_value == 0:
         root.feedback.set("")
@@ -106,17 +101,19 @@ def validate_ans():
         root.score.set(root.score.get() + 5)
         root.label_feedback.config(foreground="green")
         root.feedback.set("Correct!")
-       # with open("answer.txt","a", encoding="utf-8") as file:
-
-
+        with open("answer.txt","a", encoding="utf-8") as file:
+            file.write(selected_text + '\n')
         print("Correct!")
     else:
         root.label_feedback.config(foreground="red")
         root.feedback.set(f"Incorrect!, Correct answer is {root.correct_answer}")
+        with open("answer.txt","a", encoding="utf-8") as file:
+            file.write(selected_text + '\n' + '\n')
+        #style.map('custom.Toolbutton', background=[('disabled','red'),])
         print("Incorrect!")
 
     print(f"selected:{selected_text},correct:{root.correct_answer}")
-    disable_choices()
+
 #disable after choice
 def disable_choices():
     root.Button1.config(state="disabled")
@@ -137,10 +134,35 @@ def menu():
     root.menu.add_command(label="Exit", command=root.quit)
     top.config(menu=root.menu)
 
+def show_summary_window():
+        # Create a summary window
+        Sum_win = tk.Toplevel(root)
+        Sum_win.title("Summary")
+        Sum_win.geometry("500x400")
+        Summary_text=ttk.Label(Sum_win,text=f'Quiz completed,your final score is {root.score.get()}!')
+        Summary_text.pack(pady=10)
+        show_button = ttk.Button(Sum_win,bootstyle="info",text='Show selected answer', command=show_answer_file(Sum_win))
+        show_button.pack(pady=10)
+        # exit button
+        close_button = tk.Button(Sum_win, text="Exit Application", command=root.destroy)
+        close_button.pack(pady=10)
+def show_answer_file(Sum_win):
+        root.withdraw()
+        #create answer window
+        new_win = tk.Toplevel(Sum_win)
+        new_win.title("Answer")
+        new_win.geometry("500x400")
+        # Text widget to display file contents
+        text_area = tk.Text(new_win, wrap="word", font=("Aptos ExtraBold", 15))
+        text_area.pack(expand=True, fill="both")
+        with open("answer.txt", "r", encoding="utf-8") as f:
+            content = f.read()
+        text_area.insert(tk.END, content)
 #Create Widgets
 def createWidgets(root,top):
-    style = ttk.Style()
     style.configure('body.TFrame',background="#D3EAFF")
+    # buttons style
+    style.configure("custom.Toolbutton", background="#FF8DC6", foreground="red", font=("Aptos ExtraBold", 16))
     # setting question frames
     def create_question_frames(container):
         frame = ttk.Frame(container)
@@ -195,21 +217,20 @@ def createWidgets(root,top):
         frame['relief'] = 'solid'
         frame.columnconfigure(0, weight=1)
         # Create multiple choices
-        root.Button1 = ttk.Radiobutton(frame, style='custom.Outline.Toolbutton', textvariable=root.O1,
+        root.Button1 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O1,
                                        variable=root.user_selected, value=1, command=lambda: set_choices(1))
-        root.Button2 = ttk.Radiobutton(frame, style='custom.Outline.Toolbutton', textvariable=root.O2,
+        root.Button2 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O2,
                                        variable=root.user_selected, value=2, command=lambda: set_choices(2))
-        root.Button3 = ttk.Radiobutton(frame, style='custom.Outline.Toolbutton', textvariable=root.O3,
+        root.Button3 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O3,
                                        variable=root.user_selected, value=3, command=lambda: set_choices(3))
-        root.Button4 = ttk.Radiobutton(frame, style='custom.Outline.Toolbutton', textvariable=root.O4,
+        root.Button4 = ttk.Radiobutton(frame, style='custom.Toolbutton', textvariable=root.O4,
                                        variable=root.user_selected, value=4, command=lambda: set_choices(4))
         root.Button1.grid(column=0, row=0,sticky='w' , padx=20, pady=5)
         root.Button2.grid(column=0, row=1,sticky='w' , padx=20, pady=5)
         root.Button3.grid(column=0, row=2,sticky='w' , padx=20, pady=5)
         root.Button4.grid(column=0, row=3,sticky='w' , padx=20, pady=5)
 
-        # buttons style
-        style.configure("custom.Outline.Toolbutton",background="#FF8DC6",foreground="white",font=("Aptos ExtraBold", 12))
+
 
         return frame
 
@@ -220,7 +241,6 @@ def createWidgets(root,top):
         # Control buttons
         root.quitBtn = ttk.Button(frame,style="info.control.outline.tool", text=("Quit"), command=root.quit)
         root.nextBtn = ttk.Button(frame,style="info.control.outline.tool", text=("Check answer"), command=lambda: next_question())
-        style = ttk.Style()
         style.configure("danger.control.Outline.Toolbutton", font=("Aptos ExtraBold", 20))
         root.quitBtn.grid(column=0, row=1,padx=10, pady=10)
         root.nextBtn.grid(column=1, row=1,padx=10, pady=10)
@@ -269,11 +289,11 @@ def createWidgets(root,top):
         new_width = event.width - 50
         # Question label auto-fit
         root.label_question.config(wraplength=new_width)
-        size = max(12, int(event.height / 30))
+        size = max(20, int(event.height / 30))
         root.label_question.config(font=("Aptos ExtraBold", size))
         # Feedback label auto-fit
         root.label_feedback.config(wraplength=new_width)
-        fb_size = max(10, int(event.height / 40))
+        fb_size = max(14, int(event.height / 40))
         root.label_feedback.config(font=("Aptos ExtraBold", fb_size, "bold"))
 
     root.bind("<Configure>", adjust_widgets)
