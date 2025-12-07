@@ -11,6 +11,7 @@ pyglet.font.add_directory("MicrosoftAptosFonts")
 FILENAME="answer.txt"
 #declare variables
 root = ttk.Window(themename="cosmo")
+root.configure(bg="#f0f8ff")
 root.O1 = tk.StringVar()
 root.O2 = tk.StringVar()
 root.O3 = tk.StringVar()
@@ -102,7 +103,7 @@ def validate_ans():
         root.feedback_label.config(foreground="green")
         root.feedback.set("Correct!")
         with open("answer.txt","a", encoding="utf-8") as file:
-            file.write(selected_text + '\n')
+            file.write(selected_text + '\n'+"\n")
         print("Correct!")
     else:
         root.feedback_label.config(foreground="red")
@@ -126,13 +127,6 @@ def enable_choices():
     root.Button2.config(state="normal")
     root.Button3.config(state="normal")
     root.Button4.config(state="normal")
-
-#Create start menu
-def menu():
-    root.menu = tk.Menu(root)
-    root.menu.add_command(label="New", command=lambda: root.start_game())
-    root.menu.add_command(label="Exit", command=root.quit)
-    top.config(menu=root.menu)
 
 def show_summary_window():
         # Create a summary window
@@ -211,12 +205,11 @@ def restart_quiz(Sum_win):
 #Create Widgets
 def createWidgets(root,top):
     # Main container
-    main_frame = ttk.Frame(root, padding=20)
+    style.configure("custom.TFrame", background="#98FF98")
+    main_frame = ttk.Frame(root,style="custom.TFrame", padding=20)
     main_frame.pack(fill="both", expand=True)
-    #style for question
-
     #Question
-    root.question_frame = ttk.Labelframe(main_frame,text="Question:", padding=15, style="info")
+    root.question_frame = ttk.Labelframe(main_frame,text="Question:",style="custom.TFrame", padding=15)
     root.question_frame.pack(fill="x", pady=10)
     root.question_label = ttk.Label(
         root.question_frame,
@@ -227,7 +220,7 @@ def createWidgets(root,top):
     )
     root.question_label.pack(pady=10)
     #Choice frame
-    choices_frame = ttk.Frame(main_frame, padding=15)
+    choices_frame = ttk.Frame(main_frame,style="custom.TFrame", padding=15)
     choices_frame.pack(fill="x", pady=10)
 
     # style for buttons
@@ -250,7 +243,7 @@ def createWidgets(root,top):
         btn.pack(anchor="w", pady=5, padx=20)
 
     # Feedback section
-    root.feedback_frame = ttk.Frame(main_frame, padding=10)
+    root.feedback_frame = ttk.Frame(main_frame,style="custom.TFrame", padding=10)
     root.feedback_frame.pack(fill="x", pady=10)
 
     root.feedback_label = ttk.Label(
@@ -262,7 +255,7 @@ def createWidgets(root,top):
     root.feedback_label.pack()
 
     # Score + Progress section
-    root.status_frame = ttk.Frame(main_frame, padding=10)
+    root.status_frame = ttk.Frame(main_frame,style="custom.TFrame", padding=10)
     root.status_frame.pack(fill="x", pady=10)
 
     root.score_label = ttk.Label(
@@ -287,7 +280,7 @@ def createWidgets(root,top):
         orient="horizontal",
         mode="determinate",
         length=400,
-        maximum=10,
+        maximum=len(questions),
         variable=root.Progress
     )
     root.progress_bar.pack(pady=10)
@@ -295,7 +288,7 @@ def createWidgets(root,top):
     style.configure("next.TButton",background="#FF8DC6",foreground="green")
     style.configure("quit.TButton",background="#FF8DC6",foreground="red")
     # Navigation buttons
-    nav_frame = ttk.Frame(main_frame, padding=10)
+    nav_frame = ttk.Frame(main_frame,style="custom.TFrame", padding=10)
     nav_frame.pack(fill="x", pady=10)
     root.next_button = ttk.Button(
         nav_frame,
@@ -314,10 +307,42 @@ def createWidgets(root,top):
     root.quit_button.pack(side="left", padx=10)
 
 def create_main_window():
-    root.geometry("750x700")
-    root.resizable(True,True)
-    menu()
+    # Main window setup
+    root.geometry("700x500")
+    root.title("Quizies")
+    root.minsize(600, 400)
+
+    # Start screen frame
+    start_frame = ttk.Frame(root, padding=50)
+    start_frame.pack(fill="both", expand=True)
+
+    # Label with instruction
+    start_label = ttk.Label(
+        start_frame,
+        text="Press here to start",
+        font=("Segoe UI", 20, "bold"),
+        bootstyle="info"
+    )
+    start_label.pack(pady=20)
+
+    # Start button
+    start_button = ttk.Button(
+        start_frame,
+        text="Start Quiz ▶",
+        bootstyle="success",
+        command=lambda: start_game_ui(start_frame)
+    )
+    start_button.pack(pady=10)
+
     root.mainloop()
+
+
+def start_game_ui(start_frame):
+    # Destroy the start screen
+    start_frame.destroy()
+    # Now build your quiz widgets
+    createWidgets(root, None)
+    start_game()
 
 if __name__ == "__main__":
     create_main_window()
