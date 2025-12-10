@@ -11,9 +11,35 @@ FILENAME="answer.txt"
 
 
 root = ttk.Window(themename="cosmo")
+root.configure(background="#c6f0dd")
+ttk.Style().configure("Custom.TFrame", background="#c6f0dd")
 root.title("Quizies")
-root.geometry("700x500")
-root.configure(bg="#98FF98")
+root.geometry("750x700")
+
+# style
+style = ttk.Style()
+# Frames
+style.configure("Custom.TFrame", background="#c6f0dd")
+style.configure("Body.TFrame", background="#c6f0dd")
+
+
+# Labels
+style.configure("Custom.TLabel", background="#c6f0dd", foreground="black")
+
+# Buttons
+style.configure("Custom.TButton", background="#c6f0dd", foreground="black")
+style.configure( "Hover.TButton",background="#f0ddc6",foreground="black",font=("Aptos ExtraBold",16))
+style.map("Hover.TButton",background=[("active", "#c8c6f0")],foreground=[("active", "black")])
+
+# Radiobuttons
+style.configure("custom.Toolbutton", background="#f1c8db", foreground="black",font=("Aptos ExtraBold",13))
+style.map("custom.Toolbutton",background=[("active", "#c8c6f0"), ("selected", "#ae2d69")])
+#Progress Bar
+style.configure("Custom.Horizontal.TProgressbar", troughcolor="#c6f0dd",bordercolor="#c6f0dd",background="#6fbf8b",lightcolor="#6fbf8b",darkcolor="#6fbf8b")
+style.configure("Score.TLabel",background="#c6f0dd",foreground="black",font=("Aptos ExtraBold", 12, "bold"))
+
+main_bg = ttk.Frame(root,style="Custom.TFrame")
+main_bg.pack(fill="both", expand=True)
 
 question_text = tk.StringVar()
 root.O1 = tk.StringVar()
@@ -37,7 +63,7 @@ def start_game():
     score = 0
     progress_value.set(0)
     score_text.set("Score: 0")
-    progress_text.set("Question 0")
+    progress_text.set(f"Question 0 of {len(questions)}")
     load_question()
     question_index.clear()
     with open(FILENAME, "w", encoding="utf-8") as f:
@@ -68,51 +94,88 @@ def load_question():
 def set_choices(choice):
     user_selected.set(choice)
 
-def validate_answer():
-    global score
-    selected = user_selected.get()
-    correct_option = current_question["Answer"]
-
-    # Determine correctness
-    if selected == correct_option:
-        feedback_text.set("Correct")
-        score += 5
-        score_text.set(f"Score: {score}")
-        result = "Correct"
-    else:
-        feedback_text.set("Wrong")
-        result = "Wrong"
-
-    # Record to file
-    with open(FILENAME, "a", encoding="utf-8") as f:
-        f.write(f"Q: {current_question['Quest']}\n")
-        f.write(f"Your answer: {root.choices[selected-1] if selected else 'None'}\n")
-        f.write(f"Correct answer: {current_question['Answer']}\n")
-        f.write(f"Result: {result}\n\n")
-
 def next_question():
     validate_answer()
     progress_value.set(progress_value.get() + 1)
-    progress_text.set(f"Question {progress_value.get()}")
+    progress_text.set(f"Question {progress_value.get()} of {len(questions)}")
+
     if progress_value.get() < len(questions):
         load_question()
     else:
         show_summary_window()
 
-# ---------------- UI Functions ---------------- #
+def validate_answer():
+    global score
+    selected = user_selected.get()
+    if selected == 0:
+        feedback_text.set("No option selected")
+        result = "None"
+    else:
+        chosen_answer = root.choices[selected - 1]
+        correct_answer = current_question["Answer"]
+
+        if chosen_answer == correct_answer:
+            feedback_text.set("Correct")
+            score += 5
+            score_text.set(f"Score: {score}")
+            result = "Correct"
+        else:
+            feedback_text.set("Wrong")
+            result = "Wrong"
+
+        # Record to file
+        with open(FILENAME, "a", encoding="utf-8") as f:
+            f.write(f"Question {progress_value.get()}: {current_question['Quest']}\n")
+            f.write(f"Your answer: {chosen_answer}\n")
+            f.write(f"Correct answer: {correct_answer}\n")
+            f.write(f"Result: {result}\n\n")
+
+
 
 def create_widgets(parent):
-    # Question
-    question_frame = tk.Frame(parent, bg="#98FF98", padx=15, pady=15)
-    question_frame.pack(fill="x", pady=10)
+    parent.grid_rowconfigure(0, weight=2)  # question area
+    parent.grid_rowconfigure(1, weight=2)  # buttons
+    parent.grid_rowconfigure(2, weight=1)  # status/progress
+    parent.grid_rowconfigure(3, weight=1)  # navigation
+    parent.grid_columnconfigure(0, weight=1)
 
-    tk.Label(question_frame, textvariable=question_text,
-             font=("Aptos ExtraBold", 16, "bold"), bg="#98FF98").pack(pady=10)
+    # Question
+    question_frame = ttk.Frame(parent, style="Custom.TFrame",padding =10)
+    question_frame.grid(row=0, column=0, sticky="nsew")
+    question_label=ttk.Label(question_frame, textvariable=question_text,
+             font=("Aptos ExtraBold", 16, "bold"), style="Custom.TLabel",wraplength=700,justify="center", anchor="center")
+    question_label.pack(expand=True)
+#PRogress
+    progress_frame = ttk.Frame(question_frame, style="Custom.TFrame")
+    progress_frame.pack(fill="x", pady=(5, 0))
+
+    progress_label = ttk.Label(
+        progress_frame, textvariable=progress_text,
+        font=("Aptos ExtraBold", 12), style="Score.TLabel"
+    )
+    progress_label.pack(side="top", pady=2)
+
+    ttk.Progressbar(
+        progress_frame, orient="horizontal", mode="determinate",
+        maximum=len(questions), variable=progress_value,
+        style="Custom.Horizontal.TProgressbar"
+    ).pack(fill="x", padx=20, pady=5)
+
+    def update_wraplength(event):
+        new_length = event.width - 40
+        if new_length < 200:
+            new_length = 200
+        question_label.configure(wraplength=new_length)
+    parent.bind("<Configure>", update_wraplength)
+    question_frame.config(height=120)
+    question_frame.pack_propagate(False)
     #Buttons
-    buttons_frame = tk.Frame(parent, bg="#98FF98", padx=15, pady=15)
-    buttons_frame.pack(fill="x", pady=10)
+    buttons_frame = ttk.Frame(parent, style="Custom.TFrame")
+    buttons_frame.grid(row=1, column=0, sticky="nsew", pady=5)
     buttons_frame['borderwidth'] = 5
     buttons_frame['relief'] = 'solid'
+    buttons_frame.grid_columnconfigure(0, weight=1)
+
     # Create multiple choices
     root.Button1 = ttk.Radiobutton(buttons_frame, style='custom.Toolbutton', textvariable=root.O1,
                                    variable=user_selected, value=1, command=lambda: set_choices(1))
@@ -123,92 +186,83 @@ def create_widgets(parent):
     root.Button4 = ttk.Radiobutton(buttons_frame, style='custom.Toolbutton', textvariable=root.O4,
                                    variable=user_selected, value=4, command=lambda: set_choices(4))
 
-    root.Button1.grid(column=0, row=0, sticky='w', padx=20, pady=5)
-    root.Button2.grid(column=0, row=1, sticky='w', padx=20, pady=5)
-    root.Button3.grid(column=0, row=2, sticky='w', padx=20, pady=5)
-    root.Button4.grid(column=0, row=3, sticky='w', padx=20, pady=5)
-    # Feedback
-    tk.Label(parent, textvariable=feedback_text,
-             font=("Aptos ExtraBold", 12, "bold"), bg="#98FF98").pack(pady=10)
-
-    # Score + Progress
-    status_frame = tk.Frame(parent, bg="#98FF98", padx=10, pady=10)
-    status_frame.pack(fill="x", pady=10)
-
-    tk.Label(status_frame, textvariable=score_text,
-             font=("Aptos ExtraBold", 12, "bold"), bg="#98FF98").pack(side="left", padx=10)
-
-    tk.Label(status_frame, textvariable=progress_text,
-             font=("Aptos ExtraBold", 12), bg="#98FF98").pack(side="right", padx=10)
-
-    # Progress bar
-    ttk.Progressbar(parent, orient="horizontal", mode="determinate",
-                    length=400, maximum=len(questions),
-                    variable=progress_value, bootstyle="success").pack(pady=10)
-
+    for i, btn in enumerate([root.Button1, root.Button2, root.Button3, root.Button4]):
+        btn.grid(column=0, row=i, sticky="w", padx=20, pady=5)
     # Navigation
-    nav_frame = tk.Frame(parent, bg="#98FF98", padx=10, pady=10)
-    nav_frame.pack(fill="x", pady=10)
 
-    ttk.Button(nav_frame, text="Next ➡", bootstyle="info",
-               command=next_question).pack(side="right", padx=10)
+    nav_frame = ttk.Frame(parent, style="Custom.TFrame", padding=20)
+    nav_frame.grid(row=3, column=0, sticky="ew")
 
-    ttk.Button(nav_frame, text="Quit", bootstyle="danger",
-               command=parent.quit).pack(side="left", padx=10)
+    nav_frame.grid_columnconfigure(0, weight=1)
+    nav_frame.grid_columnconfigure(1, weight=1)
+
+    root.quit_button = ttk.Button(nav_frame, text="Quit", style="Hover.TButton", command=root.quit)
+    root.quit_button.grid(row=0, column=0, sticky="w", padx=20, pady=5)
+
+    root.next_button = ttk.Button(nav_frame, text="Next ➡", style="Hover.TButton", command=next_question)
+    root.next_button.grid(row=0, column=1, sticky="e", padx=20, pady=5)
+
 
 def show_summary_window():
+    root.next_button.configure(state="disabled")
+    root.quit_button.configure(state="disabled")
+
     sum_win = tk.Toplevel()
     sum_win.title("Quiz Summary")
-    sum_win.geometry("500x400")
+    sum_win.geometry("500x700")
 
-    frame = ttk.Frame(sum_win, padding=10)
-    frame.pack(fill="both", expand=True)
+    # Content area
+    content = ttk.Frame(sum_win, style="Custom.TFrame", padding=10)
+    content.pack(fill="both", expand=True)
 
-    text_frame = ttk.Frame(frame)
+    text_frame = ttk.Frame(content, style="Custom.TFrame")
     text_frame.pack(fill="both", expand=True)
 
     scrollbar = ttk.Scrollbar(text_frame, orient="vertical")
     scrollbar.pack(side="right", fill="y")
 
-    answer_text = tk.Text(text_frame, wrap="word",
-                          yscrollcommand=scrollbar.set,
-                          font=("Aptos ExtraBold", 12))
+    answer_text = tk.Text(
+        text_frame, wrap="word", yscrollcommand=scrollbar.set,
+        font=("Aptos ExtraBold", 10), bg="#c6f0dd"
+    )
     answer_text.pack(fill="both", expand=True)
     scrollbar.config(command=answer_text.yview)
 
-    # Insert final score
     answer_text.insert("1.0", f"Final Score: {score}\n\n")
-
-    # Read and display answer.txt
     try:
         with open(FILENAME, "r", encoding="utf-8") as f:
             contents = f.read()
         answer_text.insert("end", contents)
     except FileNotFoundError:
         answer_text.insert("end", "No answers recorded.\n")
-
     answer_text.insert("end", "\nThanks for playing!\n")
     answer_text.config(state="disabled")
 
-    nav_frame = ttk.Frame(sum_win, padding=10)
-    nav_frame.pack(fill="x")
+    # Nav bar pinned to bottom, not expanding vertically
+    nav_frame = ttk.Frame(sum_win, style="Custom.TFrame", padding=10)
+    nav_frame.pack(side="bottom", fill="x")
+
+    nav_frame.grid_columnconfigure(0, weight=1)
+    nav_frame.grid_columnconfigure(1, weight=1)
 
     ttk.Button(nav_frame, text="Play Again", bootstyle="success",
-               command=lambda: restart_quiz(sum_win)).pack(side="left", padx=10)
-
+               command=lambda: restart_quiz(sum_win)).grid(row=0, column=0, sticky="w", padx=10)
     ttk.Button(nav_frame, text="Close", bootstyle="danger",
-               command=sum_win.destroy).pack(side="right", padx=10)
+               command=root.destroy).grid(row=0, column=1, sticky="e", padx=10)
 
 def restart_quiz(window):
     window.destroy()
+    root.next_button.configure(state="normal")
+    root.quit_button.configure(state="normal")
     start_game()
 
+
 def create_main_window():
-    start_frame = tk.Frame(root, bg="#98FF98", padx=50, pady=50)
+    start_frame = ttk.Frame(main_bg, style="Custom.TFrame",padding=50)
     start_frame.pack(fill="both", expand=True)
 
-    tk.Label(start_frame, text="Press here to start",
-             font=("Aptos ExtraBold", 20, "bold"), bg="#98FF98").pack(pady=20)
+    ttk.Label(start_frame, text="Press here to start",
+             font=("Aptos ExtraBold", 20, "bold"), style="Custom.TLabel").pack(pady=20)
 
     ttk.Button(start_frame, text="Start Quiz ▶", bootstyle="success",
                command=lambda: start_game_ui(start_frame)).pack(pady=10)
@@ -217,8 +271,16 @@ def create_main_window():
 
 def start_game_ui(start_frame):
     start_frame.destroy()
-    main_frame = tk.Frame(root, bg="#98FF98", padx=20, pady=20)
-    main_frame.pack(fill="both", expand=True)
+
+    ttk.Style().configure("main.TFrame",background="#c6f0dd")
+    for widget in main_bg.winfo_children():
+        widget.destroy()
+    main_bg.grid_rowconfigure(0, weight=0)
+    main_bg.grid_rowconfigure(2, weight=0)
+    main_bg.grid_rowconfigure(1, weight=1)
+
+    main_frame = ttk.Frame(main_bg, style="Custom.TFrame")
+    main_frame.pack(fill="both", expand=True, padx=20, pady=20)
     create_widgets(main_frame)
     start_game()
 
