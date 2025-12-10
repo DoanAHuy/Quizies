@@ -244,7 +244,6 @@ def show_summary_window():
     answer_text.insert("end", "\nThanks for playing!\n")
     answer_text.config(state="disabled")
 
-    # Nav bar pinned to bottom, not expanding vertically
     nav_frame = ttk.Frame(sum_win, style="Custom.TFrame", padding=10)
     nav_frame.pack(side="bottom", fill="x")
 
