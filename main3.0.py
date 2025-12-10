@@ -2,13 +2,19 @@ import tkinter as tk
 import ttkbootstrap as ttk
 import pyglet
 import random
+import sys,os
 from DATA import questions
 
 # Variables
-pyglet.font.add_directory("MicrosoftAptosFonts")# font path
+def resource_path(relative_path):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+font_path = resource_path("Aptos-ExtraBold.ttf")
+pyglet.font.add_file(font_path)
 pyglet.options['win32_gdi_font'] = True #fix font path
 FILENAME="answer.txt"
-
 
 root = ttk.Window(themename="cosmo")
 root.configure(background="#c6f0dd")
