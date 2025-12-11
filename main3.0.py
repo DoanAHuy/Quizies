@@ -4,48 +4,54 @@ import pyglet
 import random
 import sys,os
 from DATA import questions
+from PIL import Image, ImageTk
 
-# Variables
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
+# Variables
+logo_path="logo.jpg"
+logo=Image.open(logo_path)
+logo=logo.resize((297, 243), Image.Resampling.LANCZOS)
 font_path = resource_path("Aptos-ExtraBold.ttf")
 pyglet.font.add_file(font_path)
 pyglet.options['win32_gdi_font'] = True #fix font path
 FILENAME="answer.txt"
 
 root = ttk.Window(themename="cosmo")
-root.configure(background="#c6f0dd")
-ttk.Style().configure("Custom.TFrame", background="#c6f0dd")
+root.configure(background="#FEF2F2")
+ttk.Style().configure("Custom.TFrame", background="#FEF2F2")
 root.title("Quizies")
-root.geometry("750x700")
+root.geometry("750x800")
+root.iconbitmap("app_logo.ico")
 
 # style
 style = ttk.Style()
 # Frames
-style.configure("Custom.TFrame", background="#c6f0dd")
-style.configure("Body.TFrame", background="#c6f0dd")
-
+style.configure("Custom.TFrame", background="#FEF2F2")
+style.configure("Body.TFrame", background="white")
+style.configure("Pink.TLabel",background="#FEF2F2")
 
 # Labels
-style.configure("Custom.TLabel", background="#c6f0dd", foreground="black")
+style.configure("Custom.TLabel", background="#FEF2F2", foreground="black")
 
 # Buttons
-style.configure("Custom.TButton", background="#c6f0dd", foreground="black")
+style.configure("Custom.TButton", background="#FEF2F2", foreground="black")
 style.configure( "Hover.TButton",background="#f0ddc6",foreground="black",font=("Aptos ExtraBold",16))
 style.map("Hover.TButton",background=[("active", "#c8c6f0")],foreground=[("active", "black")])
-
+style.configure("Start_button.TButton", background="#08B36A", font=("Aptos ExtraBold",14))
 # Radiobuttons
 style.configure("custom.Toolbutton", background="#f1c8db", foreground="black",font=("Aptos ExtraBold",13))
 style.map("custom.Toolbutton",background=[("active", "#c8c6f0"), ("selected", "#ae2d69")])
 #Progress Bar
-style.configure("Custom.Horizontal.TProgressbar", troughcolor="#c6f0dd",bordercolor="#c6f0dd",background="#6fbf8b",lightcolor="#6fbf8b",darkcolor="#6fbf8b")
-style.configure("Score.TLabel",background="#c6f0dd",foreground="black",font=("Aptos ExtraBold", 12, "bold"))
+style.configure("Custom.Horizontal.TProgressbar", troughcolor="#FEF2F2",bordercolor="#FEF2F2",background="#6fbf8b",lightcolor="#6fbf8b",darkcolor="#6fbf8b")
+style.configure("Score.TLabel",background="#FEF2F2",foreground="black",font=("Aptos ExtraBold", 12, "bold"))
 
 main_bg = ttk.Frame(root,style="Custom.TFrame")
 main_bg.pack(fill="both", expand=True)
+tkimage=ImageTk.PhotoImage(logo)
 
 question_text = tk.StringVar()
 root.O1 = tk.StringVar()
@@ -176,7 +182,7 @@ def create_widgets(parent):
     question_frame.config(height=120)
     question_frame.pack_propagate(False)
     #Buttons
-    buttons_frame = ttk.Frame(parent, style="Custom.TFrame")
+    buttons_frame = ttk.Frame(parent, style="Body.TFrame")
     buttons_frame.grid(row=1, column=0, sticky="nsew", pady=5)
     buttons_frame['borderwidth'] = 5
     buttons_frame['relief'] = 'solid'
@@ -229,7 +235,7 @@ def show_summary_window():
 
     answer_text = tk.Text(
         text_frame, wrap="word", yscrollcommand=scrollbar.set,
-        font=("Aptos ExtraBold", 10), bg="#c6f0dd"
+        font=("Aptos ExtraBold", 10), bg="#FEF2F2"
     )
     answer_text.pack(fill="both", expand=True)
     scrollbar.config(command=answer_text.yview)
@@ -261,23 +267,36 @@ def restart_quiz(window):
     root.quit_button.configure(state="normal")
     start_game()
 
-
 def create_main_window():
-    start_frame = ttk.Frame(main_bg, style="Custom.TFrame",padding=50)
+    start_frame = ttk.Frame(main_bg, style="Custom.TFrame", padding=50)
     start_frame.pack(fill="both", expand=True)
 
-    ttk.Label(start_frame, text="Press here to start",
-             font=("Aptos ExtraBold", 20, "bold"), style="Custom.TLabel").pack(pady=20)
+    start_frame.grid_rowconfigure(0, weight=1)
+    start_frame.grid_rowconfigure(1, weight=1)
+    start_frame.grid_rowconfigure(2, weight=1)
+    start_frame.grid_columnconfigure(0, weight=1)
 
-    ttk.Button(start_frame, text="Start Quiz ▶", bootstyle="success",
-               command=lambda: start_game_ui(start_frame)).pack(pady=10)
+    # Logo with tk.Label so background shows
+    logo_label = tk.Label(start_frame, image=tkimage, bg="#FEF2F2")
+    logo_label.grid(row=0, column=0, pady=0)
+
+    # Text
+    title_label = ttk.Label(start_frame, text="Press here to start",
+                            font=("Aptos ExtraBold", 24, "bold"),
+                            style="Pink.TLabel")
+    title_label.grid(row=1, column=0, pady=20)
+
+    # Button
+    start_button = ttk.Button(start_frame, text="Start Quiz ▶", style="Start_button.TButton",
+                              command=lambda: start_game_ui(start_frame))
+    start_button.grid(row=2, column=0, pady=10)
 
     root.mainloop()
 
 def start_game_ui(start_frame):
     start_frame.destroy()
 
-    ttk.Style().configure("main.TFrame",background="#c6f0dd")
+    ttk.Style().configure("main.TFrame",img="logo.png")
     for widget in main_bg.winfo_children():
         widget.destroy()
     main_bg.grid_rowconfigure(0, weight=0)
