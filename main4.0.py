@@ -16,6 +16,7 @@ def resource_path(filename):
     return os.path.join(os.path.abspath("."), filename)
 
 # Variables
+icon_path=resource_path("app_logo.ico")
 logo_path=resource_path("logo.jpg")
 logo=Image.open(logo_path)
 logo=logo.resize((297, 243), Image.Resampling.LANCZOS)
@@ -29,7 +30,7 @@ root.configure(background="#FEF2F2")
 ttk.Style().configure("Custom.TFrame", background="#FEF2F2")
 root.title("Quizies")
 root.geometry("750x800")
-root.iconbitmap("app_logo.ico")
+root.iconbitmap(icon_path)
 
 # style
 style = ttk.Style()
