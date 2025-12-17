@@ -10,13 +10,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import re
 from collections import defaultdict
 
-def resource_path(relative_path):
-    if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
+def resource_path(filename):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, filename)
+    return os.path.join(os.path.abspath("."), filename)
 
 # Variables
-logo_path="logo.jpg"
+logo_path=resource_path("logo.jpg")
 logo=Image.open(logo_path)
 logo=logo.resize((297, 243), Image.Resampling.LANCZOS)
 font_path = resource_path("Aptos-ExtraBold.ttf")
